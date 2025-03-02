@@ -98,8 +98,10 @@ class StateSwitch extends LitElement {
 
     let newstate = undefined;
     if (this._config.entity.startsWith("query")) {
-      const param = this._config.entity.split(":")[1];
+      const [, param] = this._config.entity.split(":");
+      console.log("param", param);
       newstate = new URLSearchParams(location.search).get(param);
+      console.log("newstate", newstate);
     } else {
       switch (this._config.entity) {
         case "template":
@@ -138,6 +140,8 @@ class StateSwitch extends LitElement {
     if (newstate === undefined || !this.cards.hasOwnProperty(newstate))
       newstate = this._config.default;
     this.state = newstate;
+
+    console.log("state", this.state);
   }
 
   set hass(hass) {
