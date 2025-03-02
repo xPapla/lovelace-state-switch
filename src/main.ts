@@ -33,6 +33,12 @@ class StateSwitch extends LitElement {
       );
       window.addEventListener("hashchange", () => this.updated(new Map()));
     }
+
+    if (config.entity.startsWith("query")) {
+      window.addEventListener("location-changed", () =>
+        this.updated(new Map())
+      );
+    }
     if (config.entity === "mediaquery") {
       for (const q in config.states) {
         const mq = window.matchMedia(q);
@@ -91,37 +97,42 @@ class StateSwitch extends LitElement {
     }
 
     let newstate = undefined;
-    switch (this._config.entity) {
-      case "template":
-        newstate = this._tmpl;
-        break;
-      case "user":
-        newstate = this._hass?.user?.name;
-        break;
-      case "group":
-        newstate = this._hass?.user?.is_admin ? "admin" : "user";
-        break;
-      case "deviceID":
-      case "browser":
-        newstate = deviceID;
-        break;
-      case "hash":
-        newstate = location.hash.substring(1);
-        break;
-      case "mediaquery":
-        for (const q in this.cards) {
-          if (window.matchMedia(q).matches) {
-            newstate = q;
-            break;
-          }
-        }
-        break;
-      default:
-        if (hasTemplate(this._config.entity)) {
+    if (this._config.entity.startsWith("query")) {
+      const param = this._config.entity.split(":")[1];
+      newstate = new URLSearchParams(location.search).get(param);
+    } else {
+      switch (this._config.entity) {
+        case "template":
           newstate = this._tmpl;
-        } else {
-          newstate = this._hass?.states[this._config.entity]?.state;
-        }
+          break;
+        case "user":
+          newstate = this._hass?.user?.name;
+          break;
+        case "group":
+          newstate = this._hass?.user?.is_admin ? "admin" : "user";
+          break;
+        case "deviceID":
+        case "browser":
+          newstate = deviceID;
+          break;
+        case "hash":
+          newstate = location.hash.substring(1);
+          break;
+        case "mediaquery":
+          for (const q in this.cards) {
+            if (window.matchMedia(q).matches) {
+              newstate = q;
+              break;
+            }
+          }
+          break;
+        default:
+          if (hasTemplate(this._config.entity)) {
+            newstate = this._tmpl;
+          } else {
+            newstate = this._hass?.states[this._config.entity]?.state;
+          }
+      }
     }
 
     if (newstate === undefined || !this.cards.hasOwnProperty(newstate))
